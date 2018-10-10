@@ -76,13 +76,32 @@ shinyUI(dashboardPage(skin = "black" ,
              tabItem(tabName = "author", h2("My CV")),
              tabItem(tabName = "discl", h2("Legal Disclaimer")),
              tabItem(tabName = "user_port", 
-                     fluidPage(
-                       sliderTextInput(
-                         inputId = "date_range", label = h4(tags$b("Year interval:")), width = "100%",
-                         choices = date_choices, selected = range(date_choices), 
-                         grid = TRUE, dragRange = FALSE
-                       ),
-                       verbatimTextOutput(outputId = "res")
+                     fluidRow(column(6, h4("Select Portfolio Allocation:")),
+                              column(3, h4("Select Rebalance Schedule:")),
+                              column(3, h4("Allocation"))
+                              ),
+                     fluidRow(column(3,
+                                      uiOutput("p1ui"),
+                                      uiOutput("p2ui"),
+                                      uiOutput("p3ui")),
+                              column(3,
+                                     uiOutput("p4ui"),
+                                     uiOutput("p5ui"),
+                                     uiOutput("p6ui")),
+                              column(3,
+                                     h1("Rebalance")),
+                              column(3,
+                                     plotlyOutput("graph5"))),
+                     fluidRow(column(2, h1()),
+                              column(10,
+                                     sliderTextInput(
+                                       inputId = "date_range", label = h4("Time interval:"), width = "80%",
+                                       choices = date_choices, selected = range(date_choices),
+                                       grid = TRUE, dragRange = FALSE
+                                     # ),
+                                     # verbatimTextOutput(outputId = "res")
+                                     )
+                              )
                      )
              )
     )

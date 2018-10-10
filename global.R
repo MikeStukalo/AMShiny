@@ -5,7 +5,9 @@ library(lubridate)
 library(ggthemes)
 library(plotly)
 library(xts)
+library(RColorBrewer)
 source('./func/am_helper.R')
+
 
 #########################################
 # Part 1 for Theory descriprion
