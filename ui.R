@@ -76,9 +76,9 @@ shinyUI(dashboardPage(skin = "black" ,
              tabItem(tabName = "author", h2("My CV")),
              tabItem(tabName = "discl", h2("Legal Disclaimer")),
              tabItem(tabName = "user_port", 
-                     fluidRow(column(6, h4("Select Portfolio Allocation:")),
-                              column(3, h4("Select Rebalance Schedule:")),
-                              column(3, h4("Allocation"))
+                     fluidRow(div(column(6, h4("Select Portfolio Allocation:", align = "center")),
+                              column(3, h4("Select Rebalance Schedule:", align = "left")),
+                              column(3, h4("Allocation", align = "center")))
                               ),
                      fluidRow(column(3,
                                       uiOutput("p1ui"),
@@ -89,20 +89,24 @@ shinyUI(dashboardPage(skin = "black" ,
                                      uiOutput("p5ui"),
                                      uiOutput("p6ui")),
                               column(3,
-                                     h1("Rebalance")),
+                                     radioButtons(inputId="rebalance",
+                                                  label=NULL, 
+                                                  choices=c("Monthly","Quarterly", "Annually", "Never"))),
                               column(3,
-                                     plotlyOutput("graph5"))),
+                                     div(plotlyOutput("graph5"), align = "center", style = "height:250px"))),
                      fluidRow(column(2, h1()),
                               column(10,
-                                     sliderTextInput(
+                                     div(sliderTextInput(
                                        inputId = "date_range", label = h4("Time interval:"), width = "80%",
                                        choices = date_choices, selected = range(date_choices),
                                        grid = TRUE, dragRange = FALSE
-                                     # ),
-                                     # verbatimTextOutput(outputId = "res")
-                                     )
+                                     ), style = "height:150px")
                               )
-                     )
+                            ),
+                     fluidRow(column(6, h4("Compound Return", align="center")),
+                              column(6, h4("Performance Measures", align="center"))),
+                     fluidRow(column(6, div(plotlyOutput("graph6"), align="center")),
+                              column(6, div(tableOutput("bt_table1"), align="center")))
              )
     )
     

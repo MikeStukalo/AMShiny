@@ -129,7 +129,7 @@ for (ret in tret_vector){
 
 
 g4 = ggplot(data=sim_port, aes(x=Risk, y=Return)) + geom_point(data=sim_port, aes(x=Risk, y=Return), color='gray', alpha=0.5) + 
-  geom_line(data=ef_line, aes(x=Risk, y=Return, text = Portfolio, group=1), color='steelblue3', size =5, alpha=0.5) + 
+  geom_line(data=ef_line, aes(x=Risk, y=Return, text = Portfolio, group=1), color='steelblue3', size =3, alpha=0.5) + 
   ylim(0,0.10) + theme_hc() + xlab('Risk (standard deviation of returns, annualized)') + ylab('Average Returns, annualized')
 
 g4 = ggplotly(g4, tooltip = "text", width = 600)
@@ -145,3 +145,7 @@ g4 = g4 %>% layout(margin = list(b = 50, l = 50, t = 120), title = "Simulated Po
 
 date_choices = seq(as.Date("2000-01-01"), as.Date("2018-10-01"), by="1 month")
 date_choices[length(date_choices)] = as.Date("2018-09-30")
+
+
+#load risk-free rates
+rf = read.csv("./data/rf.csv")

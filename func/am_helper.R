@@ -3,6 +3,9 @@
 ### Mikhail Stukalo, 2018 
 ###
 library(tseries)
+library(dplyr)
+library(tibble)
+library(PerformanceAnalytics)
 
 
 # Function that calculates portfolio return/risk given mean returns of assets and a covariance matrix
@@ -43,8 +46,7 @@ simPortfolios = function(mean_ret, cov_matrix, nsim=10000){
 
 
 ## Function that finds weights of assets on the efficient frontier
-
-
+# By target return
 findEfficientFrontier.Return = function(zoo, target_ret, short = FALSE){
 
     #Calculate optimal weights
@@ -58,6 +60,82 @@ findEfficientFrontier.Return = function(zoo, target_ret, short = FALSE){
     
     return (opt.weights) 
 }
-    
 
+# By target risk
+# findEfficientFrontier.Risk = function(zoo, target_risk, short = FALSE){
+#   
+#   #Calculate optimal weights
+#   opt.weights = portfolio.optim(returns, ps=target_risk, shorts = short)$pw
+#   
+#   if (short == FALSE){
+#     opt.weights = pmax(opt.weights, 0) #Correct approximation error
+#     
+#     opt.weights = opt.weights/sum(opt.weights)
+#   }
+#   
+#   return (opt.weights) 
+# }
+# 
+# #TMP
+# ggplot(data=sim_port, aes(x=Risk, y=Return)) + geom_point()
+# target_risk = 0.1/sqrt(250)
+# 
+# ef_w = findEfficientFrontier.Risk(returns, target_risk)
+# ef_ret = calcPortPerformance(ef_w, mean_ret, cov_matrix)[[1]]
+# ef_risk = calcPortPerformance(ef_w, mean_ret, cov_matrix)[[2]]
+
+#Function that calculates portfolio returns
+calcPortReturn = function(df, from, to, wght, rebalance){
+  
+  #Cut dataframe to reflect date range
+  df_range = df %>% rownames_to_column("date") %>%
+    filter(as.Date(date)>=from & as.Date(date) <= to) %>% column_to_rownames("date")
+  
+  df_range = xts(df_range, order.by = as.Date(row.names(df_range)))
+  indexClass(df_range) <- "Date"
+  
+  #Create repalace operator
+  reb_op = ifelse(rebalance=="Never", NA,
+                  ifelse(rebalance=="Annually", "years", 
+                  ifelse(rebalance=="Quarterly", "quarters",
+                         "months")))
+  
+  port_ret = Return.portfolio(df_range, weights = wght, geometric = T, rebalance_on = reb_op)
+  
+  port_ret = data.frame(port_ret)
+  
+  colnames(port_ret) = c("RetPort")
+  
+  return (port_ret)
+  
+}
+
+
+#Function that calculates portfolio performance measures
+
+calcPortMeasures = function (port_ret, benchmark, rf){
+  
+  mean_rf = mean(rf)
+  mean_port_ret = mean(port_ret)
+  sd_port_ret = sd(port_ret)
+  
+  #Calculate Sharpe
+  sharpe = ((mean_port_ret - mean_rf) / sd_port_ret) * sqrt(250)
+  
+  #Calculate Beta
+  mod = lm(formula = port_ret~benchmark)
+  beta = summary(mod)$coefficients[2,1]
+  
+  #Calculate Sortino
+  sortino = SortinoRatio(port_ret) * sqrt(250)
+  
+  #Calculate Taylor
+  treynor = ((mean_port_ret - mean_rf)*250)*100/beta
+  
+  results = list("AvRet"=mean_port_ret * 250, "StDev" = sd_port_ret * sqrt(250),
+                 "Sharpe" = sharpe, "Sortino" = sortino[1], "Beta" = beta, "Treynor" = treynor)
+  
+  return (results)
+  
+}
 

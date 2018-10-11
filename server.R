@@ -1,5 +1,6 @@
 source('./func/shiny_helper.R')
 
+my_colors = brewer.pal(6, "Blues")
 
 shinyServer(function(input, output, session){
   
@@ -7,7 +8,7 @@ shinyServer(function(input, output, session){
   ##  Theory Page
   ###############
   
-  # Render graphs for Theory part
+  # Render graphs for Theory part (ggplot comes from global.R)
   output$graph1 =renderPlotly(g1)
   output$graph2 =renderPlotly(g2)
   output$graph3 =renderPlotly(g3)
@@ -18,17 +19,17 @@ shinyServer(function(input, output, session){
   ##  Allocation Page
   ###############
   
-  #Weights
+  #Weights (make sure that sliders are mutually dependent and weights add up to 1)
   # Initialize portfolio weights
   port_weight = reactiveValues(weight=rep(1/6, 6)) # naive diversification
   
-  # If any of the sliders change, then recalculate weights to satisfy sum to 1 constraint
+  # If any of the sliders change, then recalculate other weight weights to satisfy sum to 1 constraint
   observers = list(
     observeEvent(input$p1,
                  {
-                   suspendMany(observers)
+                   suspendMany(observers) #This function comes from shinyhelper.R
                    port_weight$weight = updateweight(port_weight$weight, input$p1, 1)
-                   resumeMany(observers)
+                   resumeMany(observers) #This function comes from shinyhelper.R
                  }
     ),
     observeEvent(input$p2,
@@ -70,10 +71,10 @@ shinyServer(function(input, output, session){
   
   # If the weights change, update the sliders
   output$p1ui = renderUI({
-    wghtsliderInput("p1", port_weight$weight[1], label = "Russell 2000")
+    wghtsliderInput("p1", port_weight$weight[1], label = "Russell 2000") #This function comes from shinyhelper.R
   })
   output$p2ui = renderUI({
-    wghtsliderInput("p2", port_weight$weight[2], label = "Europian Stocks")
+    wghtsliderInput("p2", port_weight$weight[2], label = "Europe Stocks")
   })
   output$p3ui = renderUI({
     wghtsliderInput("p3", port_weight$weight[3], label = "Emerging Market Stocks")
@@ -89,21 +90,21 @@ shinyServer(function(input, output, session){
   })
   
   
-  
-  
-  #Min range
+  #Date slider
+  #If min date and max date are the same - reset the slider
   observeEvent(input$date_range,{
     if(input$date_range[1] == input$date_range[2]){
       updateSliderTextInput(session,"date_range",selected = c(date_choices[1],date_choices[length(date_choices)]))
     }
   })
   
+  
   #Allocation pie chart
   output$graph5 = renderPlotly({
   
   alloc = data.frame(wght = port_weight$weight, asset = c("Russell2000","EuropeStocks","EMStocks","Treasury","CorpBond","RealEstate"))
   
-  colors = brewer.pal(6, "Blues")
+  
   
   g5 = plot_ly(alloc, labels = ~asset, values = ~wght, type = 'pie',
                textposition = 'inside',
@@ -111,19 +112,109 @@ shinyServer(function(input, output, session){
                insidetextfont = list(color = '#000'),
                hoverinfo = 'text',
                text = ~paste(round(wght,4)*100, ' %'),
-               marker = list(colors = colors,
+               marker = list(colors = my_colors,
                              line = list(color = '#FFFFFF', width = 1)),
-               showlegend = FALSE) %>%
+               showlegend = FALSE, width=250, height=250) %>%
     layout(xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
            yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-           width=250, height=250,
            paper_bgcolor='rgba(0,0,0,0)',
            plot_bgcolor='rgba(0,0,0,0)',
-           margin = list(b = 0, l = 0, t = 0, b=0))
+           margin = list(b = 0, l = 0, t = 0))
   
   g5
   
-  
   })
+  
+  
+  # Perform backtesting
+  
+  bt_data = reactive({
+    
+    # Create a dataframe with portfolio and benchmark returns
+    
+    
+    df_tmp = df %>% mutate(date = as.Date(row.names(df)))
+    
+    
+    # Portfolio return
+    port_ret = data.frame(calcPortReturn(df, from = as.Date(input$date_range[1]), to = as.Date(input$date_range[2]), 
+                                         wght = port_weight$weight, rebalance = as.character(input$rebalance)))
+    
+    port_ret$date = as.Date(row.names(port_ret))
+    
+    port_ret = rename(port_ret, Portfolio = RetPort)
+    
+    # 60/30/10 Portfolio
+    sixty_port = data.frame(calcPortReturn(df, from = as.Date(input$date_range[1]), to = as.Date(input$date_range[2]), 
+                                           wght = c(0.6, 0, 0, 0.1, 0.3, 0), rebalance = as.character(input$rebalance)))
+    
+    sixty_port$date = as.Date(row.names(sixty_port))
+    sixty_port = rename(sixty_port, R60T10C30 = RetPort)
+    
+    # Merge into one df
+    port_ret = merge(port_ret, df_tmp[,c("Russell2000","date")], by = "date", all.x = TRUE)
+    port_ret = merge(port_ret, sixty_port, by = "date", all.x = TRUE)
+    
+    
+    return(port_ret)
+
+    
+  })
+  
+  #Plot backtest compound return
+  output$graph6 = renderPlotly({
+    
+    bt_df = bt_data()
+    
+    #Calculate compound return
+    bt_df = bt_df %>% 
+      gather(key="Asset", value="Return", -date) %>%
+      group_by(Asset) %>% 
+      arrange(date) %>% 
+      mutate(cumRet = cumprod(1+Return) - 1) %>%
+      select(date, Asset, cumRet) %>%
+      spread(key=Asset, value=cumRet)
+    
+    #Plot
+    plot_ly(bt_df, x = ~date, y = ~Portfolio, type = "scatter", mode = "line", name = "Portfolio",
+            line = list(color = "Steelblue3", width = 2), width = 700, height = 400) %>%
+      add_trace(y= ~Russell2000, name = "Russell2000",
+                line = list(color = "black", width = 2)) %>%
+      add_trace(y= ~R60T10C30, name = "Russel:60%, CorpBonds:30%, Treasury:10%",
+                line = list(color = "gray", width = 2)) %>% 
+      layout(xaxis = list(title = "", showgrid = FALSE, zeroline = TRUE, showticklabels = TRUE),
+             yaxis = list(title = "", showgrid = TRUE, zeroline = TRUE, showticklabels = TRUE),
+             
+             legend = list(orientation = "h", x = 0.1, y=0.9), 
+             paper_bgcolor='rgba(0,0,0,0)',
+             plot_bgcolor='rgba(0,0,0,0)',
+             margin = list(b = 20, l = 20, t = 30))
+  })
+  
+  # Create backtest preformance stats
+  
+  output$bt_table1 = renderTable({
+    
+    #Select data
+    ret_df = bt_data()
+    
+    ret_df = ret_df %>% rename(Russell=Russell2000, Mixed = R60T10C30) %>%
+      select(date, Portfolio, Russell, Mixed)
+    
+    rf_range = rf%>% filter(as.Date(date) >= as.Date(input$date_range[1]) & as.Date(date) <= as.Date(input$date_range[2]))
+    
+    
+    #Calculate performance measures
+    perf_df = data.frame(Measure = c("Return (annualized)","Risk (annualized)","Sharpe","Sortino","Beta","Treynor"))
+    perf_df$Portfolio = unlist(calcPortMeasures(ret_df$Portfolio, ret_df$Russell, rf_range$rf))
+    perf_df$Russell = unlist(calcPortMeasures(ret_df$Russell, ret_df$Russell, rf_range$rf))
+    perf_df$Mixed = unlist(calcPortMeasures(ret_df$Mixed, ret_df$Russell, rf_range$rf))
+
+    return (perf_df)
+    
+  })
+  
+  ##### Testing area
+  output$res <- renderText({input$rebalance})
   
 })
