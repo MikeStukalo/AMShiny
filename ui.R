@@ -27,13 +27,18 @@ shinyUI(dashboardPage(skin = "black" ,
   ),
   
   dashboardBody(
-    tabItems(tabItem(tabName = "about", h2("Some description of the App")),
+    tabItems(
+      
+            ####ABOUT PAGE
+            tabItem(tabName = "about", h2("Some description of the App")),
              
-             tabItem(tabName = "theory_1", 
+            ####Risk/Return Page
+            tabItem(tabName = "theory_1", 
                      fluidPage(h1("Risk/Return Ratio"),
                                p("In 1952 Harry Markowitz suggested that assets should be evaluated based on their risk/return ratio.
                                   For the purposes of this App I look at the asset returns measured by corresponding indices in 1Q2000 
-                                 - 3Q2018. <br> The assets are:"),
+                                 - 3Q2018. "),
+                               p("The assets are:"),
                                p(em("Equities:")),
                                tags$div(tags$ul(
                                  tags$li("Russell 2000"),
@@ -58,12 +63,15 @@ shinyUI(dashboardPage(skin = "black" ,
                                )
                      ),
              
-             tabItem(tabName = "theory_2", 
-                     fluidPage(h1("Optimal portfolio"),
+            #####Optimal potrfolio page
+             
+            tabItem(tabName = "theory_2", 
+                     fluidPage(fluidRow(
+                       column(6,h1("Optimal portfolio"),
                                p("Asset returns are not perferctly correlated. Therefor we can combine assets into portfolios, and harverst 
                                  the results of diversification."),
                                p("However, diversification is not limitless. For each expected risk there will be a portfolio with 
-                                 a maximum achievable risk. The graph below shows risk/return profiles of simulated portfolios (gray) and 
+                                 a maximum achievable risk.The graph below shows risk/return profiles of simulated portfolios (gray) and 
                                  a line (blue) depicting portfolios offering highest return for a given risk."),
                                p("In Harry Markowitz (1952) framework, such line is called the Efficient Frontier. However, Markowitz' theory 
                                  assumes that investors hold long-short portfolio. In our analysis we limit ourselves to long-only portfolios, 
@@ -71,11 +79,25 @@ shinyUI(dashboardPage(skin = "black" ,
                                  'Optimal Portfolios', and the line itself as the 'Optimal Line'."),
                                br(),
                                plotlyOutput("graph4")
-                               )
+                               )))
                      ),
-             tabItem(tabName = "author", h2("My CV")),
-             tabItem(tabName = "discl", h2("Legal Disclaimer")),
-             tabItem(tabName = "user_port", 
+             
+            
+            ##### My CV Page
+            tabItem(tabName = "author", h2("My CV")),
+            
+            
+            ##### Legal Disclaimer Page 
+            tabItem(tabName = "discl", h2("Legal Disclaimer")),
+             
+            
+            
+            
+            #####  HERE IS WHERE FUN BEGINS
+            #####
+            
+            #### Your allocation Page
+            tabItem(tabName = "user_port", 
                      fluidRow(div(column(6, h4("Select Portfolio Allocation:", align = "center")),
                               column(3, h4("Select Rebalance Schedule:", align = "left")),
                               column(3, h4("Allocation", align = "center")))
@@ -89,25 +111,35 @@ shinyUI(dashboardPage(skin = "black" ,
                                      uiOutput("p5ui"),
                                      uiOutput("p6ui")),
                               column(3,
+                                     fluidRow(
                                      radioButtons(inputId="rebalance",
                                                   label=NULL, 
-                                                  choices=c("Monthly","Quarterly", "Annually", "Never"))),
+                                                  choices=c("Monthly","Quarterly", "Annually", "Never"),
+                                                  selected = "Never")),
+                                     fluidRow(br(),br(),br(),
+                                       div(actionBttn("go", label = "Backtest", color = "primary"), 
+                                                         align = "left"))
+                                     ),
                               column(3,
                                      div(plotlyOutput("graph5"), align = "center", style = "height:250px"))),
-                     fluidRow(column(2, h1()),
-                              column(10,
+                     fluidRow(column(12,
                                      div(sliderTextInput(
                                        inputId = "date_range", label = h4("Time interval:"), width = "80%",
                                        choices = date_choices, selected = range(date_choices),
                                        grid = TRUE, dragRange = FALSE
-                                     ), style = "height:150px")
-                              )
-                            ),
+                                     ), align = "center"))
+                              ),
                      fluidRow(column(6, h4("Compound Return", align="center")),
                               column(6, h4("Performance Measures", align="center"))),
                      fluidRow(column(6, div(plotlyOutput("graph6"), align="center")),
-                              column(6, div(tableOutput("bt_table1"), align="center")))
-             )
+                              column(6, div(tableOutput("bt_table1"), align="center"))
+                              )
+             ),
+            
+            ####Allocation Comparison Page
+            tabItem(tabName = "opt_port", h2("Comparison with optimal"))
+            
+            
     )
     
 )

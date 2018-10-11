@@ -129,8 +129,9 @@ for (ret in tret_vector){
 
 
 g4 = ggplot(data=sim_port, aes(x=Risk, y=Return)) + geom_point(data=sim_port, aes(x=Risk, y=Return), color='gray', alpha=0.5) + 
-  geom_line(data=ef_line, aes(x=Risk, y=Return, text = Portfolio, group=1), color='steelblue3', size =3, alpha=0.5) + 
-  ylim(0,0.10) + theme_hc() + xlab('Risk (standard deviation of returns, annualized)') + ylab('Average Returns, annualized')
+  geom_line(data=ef_line, aes(x=Risk, y=Return, text = Portfolio, group=1), color='steelblue3', size =2, alpha=0.5) + 
+  ylim(0,0.10) + theme_hc() + xlab('Risk (standard deviation of returns, annualized)') + ylab('Average Returns, annualized') +
+  theme(panel.background = element_rect(fill = "transparent"))
 
 g4 = ggplotly(g4, tooltip = "text", width = 600)
 

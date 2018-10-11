@@ -8,6 +8,9 @@ library(tibble)
 library(PerformanceAnalytics)
 
 
+
+
+
 # Function that calculates portfolio return/risk given mean returns of assets and a covariance matrix
 calcPortPerformance = function(weights, mean_ret, cov_matrix){
 
@@ -50,7 +53,7 @@ simPortfolios = function(mean_ret, cov_matrix, nsim=10000){
 findEfficientFrontier.Return = function(zoo, target_ret, short = FALSE){
 
     #Calculate optimal weights
-    opt.weights = portfolio.optim(returns, pm=ret/250, shorts = short)$pw
+    opt.weights = portfolio.optim(returns, pm=target_ret/250, shorts = short)$pw
     
     if (short == FALSE){
       opt.weights = pmax(opt.weights, 0) #Correct approximation error
@@ -61,28 +64,6 @@ findEfficientFrontier.Return = function(zoo, target_ret, short = FALSE){
     return (opt.weights) 
 }
 
-# By target risk
-# findEfficientFrontier.Risk = function(zoo, target_risk, short = FALSE){
-#   
-#   #Calculate optimal weights
-#   opt.weights = portfolio.optim(returns, ps=target_risk, shorts = short)$pw
-#   
-#   if (short == FALSE){
-#     opt.weights = pmax(opt.weights, 0) #Correct approximation error
-#     
-#     opt.weights = opt.weights/sum(opt.weights)
-#   }
-#   
-#   return (opt.weights) 
-# }
-# 
-# #TMP
-# ggplot(data=sim_port, aes(x=Risk, y=Return)) + geom_point()
-# target_risk = 0.1/sqrt(250)
-# 
-# ef_w = findEfficientFrontier.Risk(returns, target_risk)
-# ef_ret = calcPortPerformance(ef_w, mean_ret, cov_matrix)[[1]]
-# ef_risk = calcPortPerformance(ef_w, mean_ret, cov_matrix)[[2]]
 
 #Function that calculates portfolio returns
 calcPortReturn = function(df, from, to, wght, rebalance){

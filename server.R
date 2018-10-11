@@ -128,82 +128,60 @@ shinyServer(function(input, output, session){
   
   # Perform backtesting
   
-  bt_data = reactive({
-    
-    # Create a dataframe with portfolio and benchmark returns
-    
-    
-    df_tmp = df %>% mutate(date = as.Date(row.names(df)))
-    
-    
-    # Portfolio return
-    port_ret = data.frame(calcPortReturn(df, from = as.Date(input$date_range[1]), to = as.Date(input$date_range[2]), 
-                                         wght = port_weight$weight, rebalance = as.character(input$rebalance)))
-    
-    port_ret$date = as.Date(row.names(port_ret))
-    
-    port_ret = rename(port_ret, Portfolio = RetPort)
-    
-    # 60/30/10 Portfolio
-    sixty_port = data.frame(calcPortReturn(df, from = as.Date(input$date_range[1]), to = as.Date(input$date_range[2]), 
-                                           wght = c(0.6, 0, 0, 0.1, 0.3, 0), rebalance = as.character(input$rebalance)))
-    
-    sixty_port$date = as.Date(row.names(sixty_port))
-    sixty_port = rename(sixty_port, R60T10C30 = RetPort)
-    
-    # Merge into one df
-    port_ret = merge(port_ret, df_tmp[,c("Russell2000","date")], by = "date", all.x = TRUE)
-    port_ret = merge(port_ret, sixty_port, by = "date", all.x = TRUE)
-    
-    
-    return(port_ret)
-
-    
-  })
   
+  bt_data = reactive({bt_port(df, as.Date(input$date_range[1]), as.Date(input$date_range[2]), port_weight$weight, input$rebalance)})
+
   #Plot backtest compound return
   output$graph6 = renderPlotly({
+
+    input$go
+    
+    isolate({  ### To let weights settle
     
     bt_df = bt_data()
-    
+
     #Calculate compound return
-    bt_df = bt_df %>% 
+    bt_df = bt_df %>%
       gather(key="Asset", value="Return", -date) %>%
-      group_by(Asset) %>% 
-      arrange(date) %>% 
+      group_by(Asset) %>%
+      arrange(date) %>%
       mutate(cumRet = cumprod(1+Return) - 1) %>%
       select(date, Asset, cumRet) %>%
       spread(key=Asset, value=cumRet)
-    
+
     #Plot
     plot_ly(bt_df, x = ~date, y = ~Portfolio, type = "scatter", mode = "line", name = "Portfolio",
             line = list(color = "Steelblue3", width = 2), width = 700, height = 400) %>%
       add_trace(y= ~Russell2000, name = "Russell2000",
                 line = list(color = "black", width = 2)) %>%
       add_trace(y= ~R60T10C30, name = "Russel:60%, CorpBonds:30%, Treasury:10%",
-                line = list(color = "gray", width = 2)) %>% 
+                line = list(color = "gray", width = 2)) %>%
       layout(xaxis = list(title = "", showgrid = FALSE, zeroline = TRUE, showticklabels = TRUE),
              yaxis = list(title = "", showgrid = TRUE, zeroline = TRUE, showticklabels = TRUE),
-             
-             legend = list(orientation = "h", x = 0.1, y=0.9), 
+
+             legend = list(orientation = "h", x = 0.1, y=1.2),
              paper_bgcolor='rgba(0,0,0,0)',
              plot_bgcolor='rgba(0,0,0,0)',
              margin = list(b = 20, l = 20, t = 30))
+    })
   })
-  
-  # Create backtest preformance stats
-  
+
+  #Create backtest preformance stats
+
   output$bt_table1 = renderTable({
+
+    input$go
     
+    isolate({
     #Select data
     ret_df = bt_data()
-    
+
     ret_df = ret_df %>% rename(Russell=Russell2000, Mixed = R60T10C30) %>%
       select(date, Portfolio, Russell, Mixed)
-    
+
     rf_range = rf%>% filter(as.Date(date) >= as.Date(input$date_range[1]) & as.Date(date) <= as.Date(input$date_range[2]))
-    
-    
+
+
     #Calculate performance measures
     perf_df = data.frame(Measure = c("Return (annualized)","Risk (annualized)","Sharpe","Sortino","Beta","Treynor"))
     perf_df$Portfolio = unlist(calcPortMeasures(ret_df$Portfolio, ret_df$Russell, rf_range$rf))
@@ -211,9 +189,10 @@ shinyServer(function(input, output, session){
     perf_df$Mixed = unlist(calcPortMeasures(ret_df$Mixed, ret_df$Russell, rf_range$rf))
 
     return (perf_df)
-    
+    })
   })
   
+
   ##### Testing area
   output$res <- renderText({input$rebalance})
   
