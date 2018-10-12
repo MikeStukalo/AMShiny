@@ -88,7 +88,7 @@ shinyUI(dashboardPage(skin = "black" ,
             
             
             ##### Legal Disclaimer Page 
-            tabItem(tabName = "discl", h2("Legal Disclaimer")),
+            tabItem(tabName = "discl", div(htmlOutput("disclaimer"))),
              
             
             
@@ -137,7 +137,22 @@ shinyUI(dashboardPage(skin = "black" ,
              ),
             
             ####Allocation Comparison Page
-            tabItem(tabName = "opt_port", h2("Comparison with optimal"))
+            tabItem(tabName = "opt_port", 
+                    fluidRow(column(4, h4("Your Allocation", align="center")),
+                             column(4, h4("Same Return", align="center")),
+                             column(4, h4("Same Risk", align="center"))
+                             ),
+                    fluidRow(column(4, div(plotlyOutput("graph7"), align="center")),
+                             column(4, div(plotlyOutput("graph8"), align="center")),
+                             column(4, div(plotlyOutput("graph9"), align="center"))
+                             ),
+                    fluidRow(column(6, h4("Compound Return", align = "center")),
+                             column(6, h4("Performance Measures", align="center"))
+                            ),
+                    fluidRow(column(6, div(plotlyOutput("graph10"), allign = "center")),
+                             column(6, div(tableOutput("bt_table2"), align="center"))
+                             )
+                    )
             
             
     )

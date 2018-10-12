@@ -1,4 +1,10 @@
-# Miscellaneous functions
+######################################
+# Miscellaneous functions 
+###
+
+
+## Funcions to balance weight
+#Updates weights if changed
 updateweight = function(oldweight, new, i) {
   if (new==oldweight[i]) {
     oldweight
@@ -29,6 +35,7 @@ wghtsliderInput = function(inputId,value, label, submitted=FALSE) {
 
 
 ### Function to perform backtesting
+
 bt_port = function(df, from, to, wght, rebalance){
   
   # Create a dataframe with portfolio and benchmark returns
@@ -55,6 +62,38 @@ bt_port = function(df, from, to, wght, rebalance){
   port_ret = merge(port_ret, df_tmp[,c("Russell2000","date")], by = "date", all.x = TRUE)
   port_ret = merge(port_ret, sixty_port, by = "date", all.x = TRUE)
   
+  
+  return(port_ret)
+}
+
+
+#### Function to find optimal portfolios
+opt_port = function(df, from, to, opt_w, port_ret){
+
+  
+  #Get portfolio  returns
+  port_ret = port_ret %>% select(date, Portfolio, Russell2000)
+  
+  df_tmp = df %>% rownames_to_column("date") %>%
+    filter(as.Date(date)>=from & as.Date(date) <= to) %>% column_to_rownames("date")
+  
+  #Same return portfolio
+  opt_ret = data.frame(calcPortReturn(df_tmp, from, to, opt_w$OptRet, rebalance = "Never"))
+  opt_ret$date = as.Date(row.names(opt_ret))
+  
+  #Same risk portfolio
+  opt_risk = data.frame(calcPortReturn(df_tmp, from, to, opt_w$OptRisk, rebalance = "Never"))
+  opt_risk$date = as.Date(row.names(opt_risk))
+  
+  
+  #Combine into one dataframe
+  port_ret = merge(port_ret, opt_ret, by = "date", all.x = TRUE)
+  port_ret = merge(port_ret, opt_risk, by = "date", all.x = TRUE)
+  port_ret$date = as.Date(port_ret$date)
+  
+  
+  #Change names
+  colnames(port_ret) = c("date","Portfolio","Russell2000" , "OptRet","OptRisk")
   
   return(port_ret)
 }

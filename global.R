@@ -6,7 +6,13 @@ library(ggthemes)
 library(plotly)
 library(xts)
 library(RColorBrewer)
+library(tseries)
+library(tibble)
+library(PerformanceAnalytics)
+library(DEoptim)
 source('./func/am_helper.R')
+source('./func/shiny_helper.R')
+
 
 
 #########################################
@@ -131,7 +137,14 @@ for (ret in tret_vector){
 g4 = ggplot(data=sim_port, aes(x=Risk, y=Return)) + geom_point(data=sim_port, aes(x=Risk, y=Return), color='gray', alpha=0.5) + 
   geom_line(data=ef_line, aes(x=Risk, y=Return, text = Portfolio, group=1), color='steelblue3', size =2, alpha=0.5) + 
   ylim(0,0.10) + theme_hc() + xlab('Risk (standard deviation of returns, annualized)') + ylab('Average Returns, annualized') +
-  theme(panel.background = element_rect(fill = "transparent"))
+  theme(
+    panel.background = element_rect(fill = "transparent") # bg of the panel
+    , plot.background = element_rect(fill = "transparent", color = NA) # bg of the plot
+    , panel.grid.major = element_blank() # get rid of major grid
+    , panel.grid.minor = element_blank() # get rid of minor grid
+    , legend.background = element_rect(fill = "transparent") # get rid of legend bg
+    , legend.box.background = element_rect(fill = "transparent") # get rid of legend panel bg
+  )
 
 g4 = ggplotly(g4, tooltip = "text", width = 600)
 

@@ -2,11 +2,8 @@
 ###
 ### Mikhail Stukalo, 2018 
 ###
-library(tseries)
-library(dplyr)
-library(tibble)
-library(PerformanceAnalytics)
-library(DEoptim)
+
+
 
 
 
@@ -50,8 +47,8 @@ simPortfolios = function(mean_ret, cov_matrix, nsim=10000){
 
 ## Function that finds weights of assets on the efficient frontier
 # By target return
-findEfficientFrontier.Return = function(zoo, target_ret, short = FALSE){
-
+findEfficientFrontier.Return = function(returns, target_ret, short = FALSE){
+    
     #Calculate optimal weights
     opt.weights = portfolio.optim(returns, pm=target_ret/250, shorts = short)$pw
     
@@ -63,6 +60,8 @@ findEfficientFrontier.Return = function(zoo, target_ret, short = FALSE){
     
     return (opt.weights) 
 }
+
+
 
 #By target risk
 findEfficientFrontier.Risk = function(mean_ret, cov_matrix, target_risk){
@@ -86,8 +85,8 @@ findEfficientFrontier.Risk = function(mean_ret, cov_matrix, target_risk){
   
   
   # Set parameters
-  controlDE <- list(reltol=.000001,steptol=150, itermax = 10000,trace = 5000,
-                    strategy=1, c=0)
+  controlDE <- list(reltol=1e-7,steptol=100, itermax = 10000,trace = 5000,
+                    strategy=6, c=0)
   
   #Long only
   N = length(mean_ret)
@@ -103,6 +102,7 @@ findEfficientFrontier.Risk = function(mean_ret, cov_matrix, target_risk){
   return(opt_w)
   
 }
+
 
 
 #Function that calculates portfolio returns
@@ -121,7 +121,7 @@ calcPortReturn = function(df, from, to, wght, rebalance){
                   ifelse(rebalance=="Quarterly", "quarters",
                          "months")))
   
-  port_ret = Return.portfolio(df_range, weights = wght, geometric = T, rebalance_on = reb_op)
+  port_ret = Return.portfolio(df_range, weights = wght, geometric = F, rebalance_on = reb_op)
   
   port_ret = data.frame(port_ret)
   
