@@ -10,6 +10,7 @@ library(tseries)
 library(tibble)
 library(PerformanceAnalytics)
 library(DEoptim)
+library(shinyjs)
 source('./func/am_helper.R')
 source('./func/shiny_helper.R')
 

@@ -103,7 +103,45 @@ findEfficientFrontier.Risk = function(mean_ret, cov_matrix, target_risk){
   
 }
 
-
+#By target return ALTERNATIVE
+findEfficientFrontier.ReturnALT = function(mean_ret, cov_matrix, target_ret){
+  
+  obj_func = function(w){
+    
+    #To avoid NA
+    if (sum(w) ==0){
+      w = w + 1e-10}
+    
+    #Balance to one
+    w = w/sum(w)
+    
+    #Calculate negative return
+    port_ret =  t(w) %*% mean_ret
+    port_risk = sqrt(t(w) %*% cov_matrix %*% w)
+    
+    
+    return(port_risk + abs(port_ret - target_ret)*10) #Penalized optimization
+  }
+  
+  
+  # Set parameters
+  controlDE <- list(reltol=1e-7,steptol=100, itermax = 10000,trace = 5000,
+                    strategy=6, c=0)
+  
+  #Long only
+  N = length(mean_ret)
+  lower = rep(0,N)
+  upper = rep(1,N)
+  
+  out <- DEoptim(fn = obj_func, lower = lower, upper = upper, control = controlDE)
+  
+  opt_w = out$optim$bestmem
+  
+  opt_w = opt_w/sum(opt_w) #Sum up to 1
+  
+  return(opt_w)
+  
+}
 
 #Function that calculates portfolio returns
 calcPortReturn = function(df, from, to, wght, rebalance){
@@ -121,7 +159,7 @@ calcPortReturn = function(df, from, to, wght, rebalance){
                   ifelse(rebalance=="Quarterly", "quarters",
                          "months")))
   
-  port_ret = Return.portfolio(df_range, weights = wght, geometric = F, rebalance_on = reb_op)
+  port_ret = Return.portfolio(df_range, weights = wght, geometric = T, rebalance_on = reb_op)
   
   port_ret = data.frame(port_ret)
   

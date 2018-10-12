@@ -1,3 +1,5 @@
+
+source('./func/am_helper.R')
 source('./func/shiny_helper.R')
 
 my_colors = brewer.pal(6, "Blues")
@@ -9,6 +11,8 @@ shinyServer(function(input, output, session){
   ###############
   
   output$disclaimer = renderUI(includeHTML("./html/disclaimer.html"))
+  output$abt = renderUI(includeHTML("./html/about.html"))
+  output$measures= renderUI(withMathJax(includeHTML("./html/measures.html")))
   
   
   
@@ -165,7 +169,8 @@ shinyServer(function(input, output, session){
     cov_matrix = cov(df_tmp) * 250
     
     #Find optimal weights
-    opt_w_ret = findEfficientFrontier.Return(returns, target_ret)
+    #opt_w_ret = findEfficientFrontier.Return(returns, target_ret)
+    opt_w_ret = findEfficientFrontier.ReturnALT(mean_ret, cov_matrix, target_ret)
     
     opt_w_risk = findEfficientFrontier.Risk(mean_ret, cov_matrix, target_risk)
     
@@ -377,9 +382,9 @@ shinyServer(function(input, output, session){
       #Plot
       plot_ly(bt_df, x = ~date, y = ~Portfolio, type = "scatter", mode = "line", name = "Portfolio",
               line = list(color = "Steelblue3", width = 2), width = 700, height = 400) %>%
-        add_trace(y= ~OptRet, name = "Same Return",
+        add_trace(y= ~OptRet, name = "Similar Return",
                   line = list(color = "black", width = 2)) %>%
-        add_trace(y= ~OptRisk, name = "Same Risk",
+        add_trace(y= ~OptRisk, name = "Similar Risk",
                   line = list(color = "gray", width = 2)) %>%
         layout(xaxis = list(title = "", showgrid = FALSE, zeroline = TRUE, showticklabels = TRUE),
                yaxis = list(title = "", showgrid = TRUE, zeroline = TRUE, showticklabels = TRUE),
@@ -412,25 +417,14 @@ shinyServer(function(input, output, session){
       perf_df$Same.Return = unlist(calcPortMeasures(ret_df$Same.Return, ret_df$Russell2000, rf_range$rf))
       perf_df$Same.Risk = unlist(calcPortMeasures(ret_df$Same.Risk, ret_df$Russell2000, rf_range$rf))
       
-      perf_df = select(perf_df, Measure, Portfolio, Same.Return, Same.Risk)
+      perf_df = perf_df %>% select(Measure, Portfolio, Same.Return, Same.Risk) %>% rename(Similar.Return = Same.Return,
+                                                                                          Similar.Risk = Same.Risk)
       
       return (perf_df)
     })
   })
   
   
-  
-  
-  ##### Testing area
-  output$res <- renderTable({
-    
-      df = opt_data()
-      
-      df = head(df,5)
-      
-      return (df)
-    
-      })
   
 })
 
