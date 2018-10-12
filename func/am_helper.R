@@ -6,7 +6,7 @@ library(tseries)
 library(dplyr)
 library(tibble)
 library(PerformanceAnalytics)
-
+library(DEoptim)
 
 
 
@@ -64,6 +64,46 @@ findEfficientFrontier.Return = function(zoo, target_ret, short = FALSE){
     return (opt.weights) 
 }
 
+#By target risk
+findEfficientFrontier.Risk = function(mean_ret, cov_matrix, target_risk){
+  
+  obj_func = function(w){
+    
+    #To avoid NA
+    if (sum(w) ==0){
+      w = w + 1e-10}
+    
+    #Balance to one
+    w = w/sum(w)
+    
+    #Calculate negative return
+    neg_ret = - t(w) %*% mean_ret
+    p_risk = sqrt(t(w) %*% cov_matrix %*% w)
+    
+    
+    return(neg_ret + abs(p_risk - target_risk)) #Penalized optimization
+  }
+  
+  
+  # Set parameters
+  controlDE <- list(reltol=.000001,steptol=150, itermax = 10000,trace = 5000,
+                    strategy=1, c=0)
+  
+  #Long only
+  N = length(mean_ret)
+  lower = rep(0,N)
+  upper = rep(1,N)
+  
+  out <- DEoptim(fn = obj_func, lower = lower, upper = upper, control = controlDE)
+  
+  opt_w = out$optim$bestmem
+  
+  opt_w = opt_w/sum(opt_w) #Sum up to 1
+  
+  return(opt_w)
+  
+}
+
 
 #Function that calculates portfolio returns
 calcPortReturn = function(df, from, to, wght, rebalance){
@@ -119,4 +159,5 @@ calcPortMeasures = function (port_ret, benchmark, rf){
   return (results)
   
 }
+
 
