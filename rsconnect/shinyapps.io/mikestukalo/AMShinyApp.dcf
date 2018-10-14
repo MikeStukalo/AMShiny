@@ -1,0 +1,12 @@
+name: AMShinyApp
+title: AMShinyApp
+username:
+account: mikestukalo
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 511559
+bundleId: 1642373
+url: https://mikestukalo.shinyapps.io/AMShinyApp/
+when: 1539543364.08076
+asMultiple: FALSE
+asStatic: FALSE

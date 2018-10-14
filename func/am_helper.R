@@ -144,7 +144,7 @@ findEfficientFrontier.ReturnALT = function(mean_ret, cov_matrix, target_ret){
 }
 
 #Function that calculates portfolio returns
-calcPortReturn = function(df, from, to, wght, rebalance){
+calcPortReturn = function(df, from, to, wght, rebalance, geometric = TRUE){
   
   #Cut dataframe to reflect date range
   df_range = df %>% rownames_to_column("date") %>%
@@ -159,7 +159,7 @@ calcPortReturn = function(df, from, to, wght, rebalance){
                   ifelse(rebalance=="Quarterly", "quarters",
                          "months")))
   
-  port_ret = Return.portfolio(df_range, weights = wght, geometric = T, rebalance_on = reb_op)
+  port_ret = Return.portfolio(df_range, weights = wght, geometric = geometric, rebalance_on = reb_op)
   
   port_ret = data.frame(port_ret)
   

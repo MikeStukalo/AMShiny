@@ -173,8 +173,8 @@ shinyUI(dashboardPage(skin = "black" ,
             ####Allocation Comparison Page
             tabItem(tabName = "opt_port", 
                     fluidRow(column(4, h4("Your Allocation", align="center")),
-                             column(4, h4("Same Return", align="center")),
-                             column(4, h4("Same Risk", align="center"))
+                             column(4, h4("Similar Return", align="center")),
+                             column(4, h4("Similar Risk", align="center"))
                              ),
                     fluidRow(column(4, div(plotlyOutput("graph7"), align="center")),
                              column(4, div(plotlyOutput("graph8"), align="center")),

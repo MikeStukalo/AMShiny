@@ -86,11 +86,11 @@ opt_port = function(df, from, to, opt_w, port_ret){
     filter(as.Date(date)>=from & as.Date(date) <= to) %>% column_to_rownames("date")
   
   #Same return portfolio
-  opt_ret = data.frame(calcPortReturn(df_tmp, from, to, opt_w$OptRet, rebalance = "Never"))
+  opt_ret = data.frame(calcPortReturn(df_tmp, from, to, opt_w$OptRet, rebalance = "Never" , geometric = FALSE))
   opt_ret$date = as.Date(row.names(opt_ret))
   
   #Same risk portfolio
-  opt_risk = data.frame(calcPortReturn(df_tmp, from, to, opt_w$OptRisk, rebalance = "Never"))
+  opt_risk = data.frame(calcPortReturn(df_tmp, from, to, opt_w$OptRisk, rebalance = "Never", geometric = FALSE))
   opt_risk$date = as.Date(row.names(opt_risk))
   
   
