@@ -11,6 +11,7 @@ library(tibble)
 library(PerformanceAnalytics)
 library(DEoptim)
 library(shinyjs)
+library(scales)
 source('./func/am_helper.R')
 source('./func/shiny_helper.R')
 
@@ -36,21 +37,23 @@ cov_matrix = cov(returns) * 250
 df1 = data.frame(Asset = colnames(df), Return = mean_ret, Risk = sd_ret)
 
 g1 = ggplot(df1, aes(x=Risk, y=Return, label=Asset)) + geom_point(color="steelblue3")  + 
+  scale_y_continuous(limits=c(0, 0.10), labels = scales::percent_format(accuracy=1)) +
+  scale_x_continuous(limits=c(0, 0.4), labels = scales::percent_format(accuracy=1)) +
   xlab('Risk (standard deviation of returns, annualized)') + ylab('Average Returns, annualized') + 
-  xlim(0, 0.4) + ylim(0,0.1) + theme_hc()
+  theme_hc() 
 
 
 
 g1 = ggplotly(g1, tooltip = c("x","y"), width = 600) %>%   add_annotations(x = df1$Risk,
                                                               y = df1$Return,
-                                                              text = df1$Asset,
+                                                              text = c("S&P500", "EuropeStocks", "EMStocks", "Treasury", "CorpBonds", "RealEstate" ),
                                                               xref = "x",
                                                               yref = "y",
                                                               showarrow = TRUE,
                                                               arrowhead = 4,
                                                               arrowsize = .5,
-                                                              ax = 50,
-                                                              ay = -20) 
+                                                              ax = 60,
+                                                              ay = -30) 
 
 g1$x$data[[1]]$text = paste("Return:", round(df1$Return, 4) * 100, "%","<br>",
                             "Risk:", round(df1$Risk, 4) * 100, "%")
@@ -70,15 +73,18 @@ g2 = ggplot(risk_ret_ann, aes(x=Risk, y=Return, text = paste(year,"<br>","Return
                                                              round(Return,4)*100,"%","<br>", "Risk:", round(Risk,4)*100,"%"))) + 
   geom_point(color="steelblue3")  + 
   xlab('Risk (standard deviation of returns, annualized)') + 
-  ylab('Average Returns, annualized') + 
-  theme_hc() + facet_wrap(~reorder(Asset, Risk, sd))
-
+  ylab('') + 
+  scale_y_continuous(labels = scales::percent_format(accuracy=1)) +
+  scale_x_continuous(labels = scales::percent_format(accuracy=1)) +
+  theme_hc() + facet_wrap(~reorder(Asset, Risk, sd)) + 
+  theme(axis.title = element_text(hjust = 1, vjust=1))
 
 g2 = ggplotly(g2, tooltip = c("text"), width = 600) 
 
 g2[['x']][['layout']][['annotations']][[1]][['y']] = -0.1 #Move y-label lower
 
-g2 = g2 %>% layout(margin = list(b = 50, l = 50, t = 120), title = "Risk/Return of Assets By Years <br> (annualized) 2000 - 3Q2018")
+g2 = g2 %>% layout(margin = list(b = 50, l = -50, t = 120), title = "Risk/Return of Assets By Years <br> (annualized) 2000 - 3Q2018",
+                   yaxis=list(title="Average Return, annualized", tickprefix=" "))
 
 # Plot graph 3
 order = risk_ret_ann %>% group_by(Asset) %>% summarise(sd_SD=sd(Risk)) %>% arrange(sd_SD) %>% select(Asset)
@@ -94,14 +100,19 @@ risk_ret_cum = df %>% mutate(date=rownames(df)) %>%
 # Re-arrange
 risk_ret_cum$facet = factor(risk_ret_cum$Asset, levels = c(order))
 
-g3 = ggplot(risk_ret_cum, aes(x=as.Date(date), y=cumRet, text = paste(date,"<br>", "Compound return:", round(cumRet,4)*100,"%"), group=1)) + geom_line(color="steelblue3") + facet_wrap(~facet) + scale_x_date(date_breaks = "5 years", date_labels =  "%y") + xlab('Years') + ylab('Compound Return') + theme_hc() 
+g3 = ggplot(risk_ret_cum, aes(x=as.Date(date), y=cumRet, text = paste(date,"<br>", "Compound return:", round(cumRet,4)*100,"%"), group=1)) + 
+    geom_line(color="steelblue3") + facet_wrap(~facet) + 
+    scale_y_continuous(labels = scales::percent_format(accuracy=1)) +
+    scale_x_date(date_breaks = "5 years", date_labels =  "%y") + 
+    xlab('Years') + ylab('') + theme_hc() 
 
 
 g3 = ggplotly(g3, tooltip = "text", width = 600)
 
 g3[['x']][['layout']][['annotations']][[1]][['y']] = -0.1 #Move y-label lower
 
-g3 = g3 %>% layout(margin = list(b = 50, l = 50, t = 120), title = "Compound Return <br> 2000 - 3Q2018")
+g3 = g3 %>% layout(margin = list(b = 50, l = 50, t = 120), title = "Compound Return <br> 2000 - 3Q2018",
+                   yaxis=list(title="Compound Return"))
 
 
 
@@ -137,7 +148,9 @@ for (ret in tret_vector){
 
 g4 = ggplot(data=sim_port, aes(x=Risk, y=Return)) + geom_point(data=sim_port, aes(x=Risk, y=Return), color='gray', alpha=0.5) + 
   geom_line(data=ef_line, aes(x=Risk, y=Return, text = Portfolio, group=1), color='steelblue3', size =2, alpha=0.5) + 
-  ylim(0,0.10) + theme_hc() + xlab('Risk (standard deviation of returns, annualized)') + ylab('Average Returns, annualized') +
+  scale_y_continuous(limits=c(0, 0.10), labels = scales::percent_format(accuracy=1)) +
+  scale_x_continuous(limits=c(0, 0.25), labels = scales::percent_format(accuracy=1)) +
+  theme_hc() + xlab('Risk (standard deviation of returns, annualized)') + ylab('') +
   theme(
     panel.background = element_rect(fill = "transparent") # bg of the panel
     , plot.background = element_rect(fill = "transparent", color = NA) # bg of the plot
@@ -149,7 +162,8 @@ g4 = ggplot(data=sim_port, aes(x=Risk, y=Return)) + geom_point(data=sim_port, ae
 
 g4 = ggplotly(g4, tooltip = "text", width = 600)
 
-g4 = g4 %>% layout(margin = list(b = 50, l = 50, t = 120), title = "Simulated Portfolios and the Optimal Line")
+g4 = g4 %>% layout(margin = list(b = 50, l = 50, t = 120), title = "Simulated Portfolios and the Optimal Line",
+                   yaxis = list(title='Average Return, annualized'))
 
 
 

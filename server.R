@@ -87,7 +87,7 @@ shinyServer(function(input, output, session){
   
   # If the weights change, update the sliders
   output$p1ui = renderUI({
-    wghtsliderInput("p1", port_weight$weight[1], label = "Russell 2000") #This function comes from shinyhelper.R
+    wghtsliderInput("p1", port_weight$weight[1], label = "S&P 500") #This function comes from shinyhelper.R
   })
   output$p2ui = renderUI({
     wghtsliderInput("p2", port_weight$weight[2], label = "Europe Stocks")
@@ -118,7 +118,7 @@ shinyServer(function(input, output, session){
   #Allocation pie chart
   output$graph5 = renderPlotly({
   
-  alloc = data.frame(wght = port_weight$weight, asset = c("Russell2000","EuropeStocks","EMStocks","Treasury","CorpBond","RealEstate"))
+  alloc = data.frame(wght = port_weight$weight, asset = c("SP500","EuropeStocks","EMStocks","Treasury","CorpBond","RealEstate"))
   
   
   
@@ -204,12 +204,12 @@ shinyServer(function(input, output, session){
     #Plot
     plot_ly(bt_df, x = ~date, y = ~Portfolio, type = "scatter", mode = "line", name = "Portfolio",
             line = list(color = "Steelblue3", width = 2), width = 700, height = 400) %>%
-      add_trace(y= ~Russell2000, name = "Russell2000",
+      add_trace(y= ~SP500, name = "SP500",
                 line = list(color = "black", width = 2)) %>%
-      add_trace(y= ~R60T10C30, name = "Russel:60%, CorpBonds:30%, Treasury:10%",
+      add_trace(y= ~R60T10C30, name = "S&P500:60%, CorpBonds:30%, Treasury:10%",
                 line = list(color = "gray", width = 2)) %>%
       layout(xaxis = list(title = "", showgrid = FALSE, zeroline = TRUE, showticklabels = TRUE),
-             yaxis = list(title = "", showgrid = TRUE, zeroline = TRUE, showticklabels = TRUE),
+             yaxis = list(title = "", showgrid = TRUE, zeroline = TRUE, showticklabels = TRUE, tickformat = "%"),
 
              legend = list(orientation = "h", x = 0.1, y=1.2),
              paper_bgcolor='rgba(0,0,0,0)',
@@ -220,7 +220,7 @@ shinyServer(function(input, output, session){
 
   #Create backtest preformance stats
 
-  output$bt_table1 = renderTable(digits =4, {
+  output$bt_table1 = renderTable(digits =2, {
 
     input$go
     
@@ -228,17 +228,19 @@ shinyServer(function(input, output, session){
     #Select data
     ret_df = bt_data()
 
-    ret_df = ret_df %>% rename(Russell=Russell2000, Mixed = R60T10C30) %>%
-      select(date, Portfolio, Russell, Mixed)
+    ret_df = ret_df %>% rename(Mixed = R60T10C30) %>%
+      select(date, Portfolio, SP500, Mixed)
 
     rf_range = rf%>% filter(as.Date(date) >= as.Date(input$date_range[1]) & as.Date(date) <= as.Date(input$date_range[2]))
 
 
     #Calculate performance measures
-    perf_df = data.frame(Measure = c("Return (annualized)","Risk (annualized)","Sharpe","Sortino","Beta","Treynor"))
-    perf_df$Portfolio = unlist(calcPortMeasures(ret_df$Portfolio, ret_df$Russell, rf_range$rf))
-    perf_df$Russell = unlist(calcPortMeasures(ret_df$Russell, ret_df$Russell, rf_range$rf))
-    perf_df$Mixed = unlist(calcPortMeasures(ret_df$Mixed, ret_df$Russell, rf_range$rf))
+    perf_df = data.frame(Measure = c("Return (annualized), %","Risk (annualized), %","Sharpe","Sortino","Beta","Treynor"))
+    perf_df$Portfolio = unlist(calcPortMeasures(ret_df$Portfolio, ret_df$SP500, rf_range$rf))
+    perf_df$SP500 = unlist(calcPortMeasures(ret_df$SP500, ret_df$SP500, rf_range$rf))
+    perf_df$Mixed = unlist(calcPortMeasures(ret_df$Mixed, ret_df$SP500, rf_range$rf))
+    
+    perf_df[1:2, c("Portfolio","SP500","Mixed")] = round(perf_df[1:2, c("Portfolio","SP500","Mixed")] * 100, 2)
 
     return (perf_df)
     })
@@ -253,7 +255,7 @@ shinyServer(function(input, output, session){
   #Current allocation
   output$graph7 = renderPlotly({
     
-    alloc = data.frame(wght = port_weight$weight, asset = c("Russell2000","EuropeStocks","EMStocks","Treasury","CorpBond","RealEstate"))
+    alloc = data.frame(wght = port_weight$weight, asset = c("SP500","EuropeStocks","EMStocks","Treasury","CorpBond","RealEstate"))
     
     
     
@@ -281,7 +283,7 @@ shinyServer(function(input, output, session){
     
     opt_w = opt_weights()
     
-    alloc = data.frame(wght = opt_w$OptRet, asset = c("Russell2000","EuropeStocks","EMStocks","Treasury","CorpBond","RealEstate"))
+    alloc = data.frame(wght = opt_w$OptRet, asset = c("SP500","EuropeStocks","EMStocks","Treasury","CorpBond","RealEstate"))
     
     
     
@@ -309,7 +311,7 @@ shinyServer(function(input, output, session){
     
     opt_w = opt_weights()
     
-    alloc = data.frame(wght = opt_w$OptRisk, asset = c("Russell2000","EuropeStocks","EMStocks","Treasury","CorpBond","RealEstate"))
+    alloc = data.frame(wght = opt_w$OptRisk, asset = c("SP500","EuropeStocks","EMStocks","Treasury","CorpBond","RealEstate"))
     
     
     
@@ -387,7 +389,7 @@ shinyServer(function(input, output, session){
         add_trace(y= ~OptRisk, name = "Similar Risk",
                   line = list(color = "gray", width = 2)) %>%
         layout(xaxis = list(title = "", showgrid = FALSE, zeroline = TRUE, showticklabels = TRUE),
-               yaxis = list(title = "", showgrid = TRUE, zeroline = TRUE, showticklabels = TRUE),
+               yaxis = list(title = "", showgrid = TRUE, zeroline = TRUE, showticklabels = TRUE, tickformat = "%"),
                
                legend = list(orientation = "h", x = 0.1, y=1.2),
                paper_bgcolor='rgba(0,0,0,0)',
@@ -398,7 +400,7 @@ shinyServer(function(input, output, session){
   
   
   ## Opt Portfolio comparison table
-  output$bt_table2 = renderTable(digits=4, {
+  output$bt_table2 = renderTable(digits=2, {
     
     input$go
     
@@ -412,13 +414,15 @@ shinyServer(function(input, output, session){
       
       
       #Calculate performance measures
-      perf_df = data.frame(Measure = c("Return (annualized)","Risk (annualized)","Sharpe","Sortino","Beta","Treynor"))
-      perf_df$Portfolio = unlist(calcPortMeasures(ret_df$Portfolio, ret_df$Russell2000, rf_range$rf))
-      perf_df$Same.Return = unlist(calcPortMeasures(ret_df$Same.Return, ret_df$Russell2000, rf_range$rf))
-      perf_df$Same.Risk = unlist(calcPortMeasures(ret_df$Same.Risk, ret_df$Russell2000, rf_range$rf))
+      perf_df = data.frame(Measure = c("Return (annualized), %","Risk (annualized), %","Sharpe","Sortino","Beta","Treynor"))
+      perf_df$Portfolio = unlist(calcPortMeasures(ret_df$Portfolio, ret_df$SP500, rf_range$rf))
+      perf_df$Same.Return = unlist(calcPortMeasures(ret_df$Same.Return, ret_df$SP500, rf_range$rf))
+      perf_df$Same.Risk = unlist(calcPortMeasures(ret_df$Same.Risk, ret_df$SP500, rf_range$rf))
       
       perf_df = perf_df %>% select(Measure, Portfolio, Same.Return, Same.Risk) %>% rename(Similar.Return = Same.Return,
                                                                                           Similar.Risk = Same.Risk)
+      
+      perf_df[1:2, c("Portfolio","Similar.Return","Similar.Risk")] = round(perf_df[1:2, c("Portfolio","Similar.Return","Similar.Risk")] * 100, 2)
       
       return (perf_df)
     })

@@ -67,7 +67,7 @@ bt_port = function(df, from, to, wght, rebalance){
   sixty_port = rename(sixty_port, R60T10C30 = RetPort)
   
   # Merge into one df
-  port_ret = merge(port_ret, df_tmp[,c("Russell2000","date")], by = "date", all.x = TRUE)
+  port_ret = merge(port_ret, df_tmp[,c("SP500","date")], by = "date", all.x = TRUE)
   port_ret = merge(port_ret, sixty_port, by = "date", all.x = TRUE)
   
   
@@ -80,7 +80,7 @@ opt_port = function(df, from, to, opt_w, port_ret){
 
   
   #Get portfolio  returns
-  port_ret = port_ret %>% select(date, Portfolio, Russell2000)
+  port_ret = port_ret %>% select(date, Portfolio, SP500)
   
   df_tmp = df %>% rownames_to_column("date") %>%
     filter(as.Date(date)>=from & as.Date(date) <= to) %>% column_to_rownames("date")
@@ -101,7 +101,8 @@ opt_port = function(df, from, to, opt_w, port_ret){
   
   
   #Change names
-  colnames(port_ret) = c("date","Portfolio","Russell2000" , "OptRet","OptRisk")
+  colnames(port_ret) = c("date","Portfolio","SP500" , "OptRet","OptRisk")
   
   return(port_ret)
 }
+

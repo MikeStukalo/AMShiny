@@ -5,8 +5,8 @@ account: mikestukalo
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 511559
-bundleId: 1642373
+bundleId: 1653357
 url: https://mikestukalo.shinyapps.io/AMShinyApp/
-when: 1539543364.08076
+when: 1540063481.46809
 asMultiple: FALSE
 asStatic: FALSE

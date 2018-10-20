@@ -75,12 +75,12 @@ shinyUI(dashboardPage(skin = "black" ,
             tabItem(tabName = "theory_1", 
                      fluidPage(h1("Risk/Return Ratio"),
                                p("In 1952 Harry Markowitz suggested that assets should be evaluated based on their risk/return ratio.
-                                  For the purposes of this App I look at the asset returns measured by corresponding indices in 1Q2000 
+                                  For the purposes of this app, I look at the asset returns measured by corresponding indices in 1Q2000 
                                  - 3Q2018. "),
                                p("The assets are:"),
                                p(em("Equities:")),
                                tags$div(tags$ul(
-                                 tags$li("Russell 2000"),
+                                 tags$li("S&P 500"),
                                  tags$li("MSCI Europian Stock Index"),
                                  tags$li("MSCI Emerging Market Stock Index"))
                                  ),
@@ -107,14 +107,14 @@ shinyUI(dashboardPage(skin = "black" ,
             tabItem(tabName = "theory_2", 
                      fluidPage(fluidRow(
                        column(6,h1("Optimal portfolio"),
-                               p("Asset returns are not perferctly correlated. Therefor we can combine assets into portfolios, and harverst 
-                                 the results of diversification."),
+                               p("Asset returns are not perferctly correlated. Therefore, we can combine assets into portfolios, and harverst 
+                                 the results of the diversification."),
                                p("However, diversification is not limitless. For each expected risk there will be a portfolio with 
-                                 a maximum achievable risk.The graph below shows risk/return profiles of simulated portfolios (gray) and 
+                                 a maximum achievable return.The graph below shows risk/return profiles of simulated portfolios (gray) and 
                                  a line (blue) depicting portfolios offering highest return for a given risk."),
                                p("In Harry Markowitz (1952) framework, such line is called the Efficient Frontier. However, Markowitz' theory 
-                                 assumes that investors hold long-short portfolio. In our analysis we limit ourselves to long-only portfolios, 
-                                 as it is the type retail investors usually hold. Therefore, we will refer to portfolios on this line as
+                                 assumes that investors hold long-short portfolios. In our analysis, we limit ourselves to long-only portfolios, 
+                                 as it is the type of portfolios retail investors usually hold. Therefore, we will refer to portfolios on this line as
                                  'Optimal Portfolios', and the line itself as the 'Optimal Line'."),
                                br(),
                                plotlyOutput("graph4")
